@@ -20,6 +20,12 @@ class Sandbox {
             this.randIndexes[i] = slowRandIndexes[i];
         }
 
+        this.randFloatI = 0; // faster replacement for Math.random() (what p5 copied to window.random())
+        this.randFloats = new Float32Array(1024); // doesn't really matter how many items this array has, the more the better, but the returns diminish.
+        for (let i = 0; i < this.randFloats.length; i++) {
+            this.randFloats[i] = random();
+        }
+
         this.behaviours = {
             "gravity": function(sandbox, x, y, pixel) {
                 let otherPixel = sandbox.getPixel(x, y+1);
@@ -27,14 +33,14 @@ class Sandbox {
                     return;
                 }
                 if (sandbox.elements[otherPixel].properties.density < sandbox.elements[pixel].properties.density) {
-                    if (random() > sandbox.elements[otherPixel].properties.density / sandbox.elements[pixel].properties.density) {
+                    if (sandbox.random() > sandbox.elements[otherPixel].properties.density / sandbox.elements[pixel].properties.density) {
                         sandbox.setPixel(x, y, otherPixel);
                         sandbox.setPixel(x, y+1, pixel);
                     }
                 }
             },
             "flowPowder": function(sandbox, x, y, pixel) {
-                let direction = -1 + (random()<0.5)*2
+                let direction = -1 + (sandbox.random()<0.5)*2
                 let otherPixel;
                 if (y < sandbox.height-1 && sandbox.elements[(otherPixel = sandbox.getPixel(x+direction, y+1))].properties.state == 3) {
                     sandbox.setPixel(x, y, otherPixel);
@@ -42,7 +48,7 @@ class Sandbox {
                 } else if (y < sandbox.height-1 && sandbox.elements[(otherPixel = sandbox.getPixel(x-direction, y+1))].properties.state == 3) {
                     sandbox.setPixel(x, y, otherPixel);
                     sandbox.setPixel(x-direction, y+1, pixel);
-                } else if (random() < 0.1 && sandbox.elements[(otherPixel = sandbox.getPixel(x+direction, y))].properties.state == 2) {
+                } else if (sandbox.random() < 0.1 && sandbox.elements[(otherPixel = sandbox.getPixel(x+direction, y))].properties.state == 2) {
                     sandbox.setPixel(x, y, otherPixel);
                     sandbox.setPixel(x+direction, y, pixel);
                 }
@@ -53,7 +59,7 @@ class Sandbox {
                     sandbox.setPixel(x, y, otherPixel);
                     sandbox.setPixel(x, y+2, pixel);
                 } else {
-                    let direction = -1 + (random()<0.5)*2
+                    let direction = -1 + (sandbox.random()<0.5)*2
                     if (sandbox.elements[(otherPixel = sandbox.getPixel(x+(direction*2), y))].properties.state == 3) {
                         sandbox.setPixel(x, y, otherPixel);
                         sandbox.setPixel(x+(direction*2), y, pixel);
@@ -71,7 +77,7 @@ class Sandbox {
             },
             "flowGas": function(sandbox, x, y, pixel) {
                 let otherPixel;
-                const direction = round(random())*2-1
+                const direction = round(sandbox.random())*2-1
                 if (x < sandbox.width-(direction == 1) && (otherPixel = sandbox.getPixel(x+direction, y)) != pixel && sandbox.elements[otherPixel].properties.state == 3) {
                     sandbox.setPixel(x+direction, y, pixel);
                     sandbox.setPixel(x, y, otherPixel);
@@ -113,7 +119,7 @@ class Sandbox {
             y = this.getY(index);
             pixel = this.pixels[index];
             if (this.elements[pixel].behaviours.length > 0) {
-                behaviour = floor(random(this.elements[pixel].behaviours.length))
+                behaviour = floor(this.random(this.elements[pixel].behaviours.length))
                 this.elements[pixel].behaviours[behaviour](this, x, y, pixel);
             }
         }
@@ -140,7 +146,7 @@ class Sandbox {
             }
             decayCount = this.decays[pixel].length;
             for (let j = 0; j < decayCount; j++) {
-                if (this.decays[pixel][floor(random()*decayCount)].do(this, x, y)) {
+                if (this.decays[pixel][floor(this.random()*decayCount)].do(this, x, y)) {
                     break;
                 }
             }
@@ -214,6 +220,13 @@ class Sandbox {
             this.randPosI = 0;
         }
         return this.randIndexes[this.randPosI];
+    }
+    random(mult = 1) {
+        this.randFloatI ++;
+        if (this.randFloatI >= this.randFloats.length) {
+            this.randFloatI = 0;
+        }
+        return this.randFloats[this.randFloatI]*mult;
     }
 }
 
