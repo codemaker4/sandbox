@@ -9,6 +9,17 @@ class Sandbox {
         this.decays = []; // similar to reactions, but for decays.
         this.simSpeed = 1;
 
+        this.randPosI = 0; // random index
+        this.randIndexes = new Uint32Array(this.width * this.height);
+        let slowRandIndexes = [];
+        for (let i = 0; i < this.width * this.height; i++) { // make indexes
+            slowRandIndexes.push(i);
+        }
+        shuffle(slowRandIndexes, true); // shuffle indexes
+        for (let i = 0; i < this.width * this.height; i++) { // store indexes in typed array
+            this.randIndexes[i] = slowRandIndexes[i];
+        }
+
         this.behaviours = {
             "gravity": function(sandbox, x, y, pixel) {
                 let otherPixel = sandbox.getPixel(x, y+1);
@@ -38,7 +49,7 @@ class Sandbox {
             },
             "flowLiquid": function(sandbox, x, y, pixel) {
                 let otherPixel
-                if (y < sandbox.height-1 && sandbox.elements[(otherPixel = sandbox.getPixel(x, y+2))].properties.state == 3) {
+                if (y < sandbox.height-2 && sandbox.elements[(otherPixel = sandbox.getPixel(x, y+2))].properties.state == 3) {
                     sandbox.setPixel(x, y, otherPixel);
                     sandbox.setPixel(x, y+2, pixel);
                 } else {
@@ -60,8 +71,9 @@ class Sandbox {
             },
             "flowGas": function(sandbox, x, y, pixel) {
                 let otherPixel;
-                if (x < sandbox.width-1 && (otherPixel = sandbox.getPixel(x+1, y)) != pixel && sandbox.elements[otherPixel].properties.state == 3) {
-                    sandbox.setPixel(x+1, y, pixel);
+                const direction = round(random())*2-1
+                if (x < sandbox.width-(direction == 1) && (otherPixel = sandbox.getPixel(x+direction, y)) != pixel && sandbox.elements[otherPixel].properties.state == 3) {
+                    sandbox.setPixel(x+direction, y, pixel);
                     sandbox.setPixel(x, y, otherPixel);
                 }
             },
@@ -78,10 +90,7 @@ class Sandbox {
         reaction.inB = this.getELementByName(reaction.inB);
         reaction.outA = this.getELementByName(reaction.outA);
         reaction.outB = this.getELementByName(reaction.outB);
-        if (this.reactions[reaction.inA] === undefined) {
-            this.reactions[reaction.inA] = [];
-        }
-        this.reactions[reaction.inA].push(reaction);
+        this.reactions.push(reaction);
     }
     addDecay(decay) {
         decay.inA = this.getELementByName(decay.inA);
@@ -93,47 +102,45 @@ class Sandbox {
     }
     tick() {
         let index;
-        let xy;
+        let x;
+        let y;
         let pixel;
         let behaviour;
         const loopCount = this.pixels.length*this.simSpeed
         for (let i = 0; i < loopCount; i++) {
-            index = floor(random(this.pixels.length));
-            xy = this.getXY(index);
+            index = this.getRandIndex();
+            x = this.getX(index);
+            y = this.getY(index);
             pixel = this.pixels[index];
             if (this.elements[pixel].behaviours.length > 0) {
                 behaviour = floor(random(this.elements[pixel].behaviours.length))
-                this.elements[pixel].behaviours[behaviour](this, xy.x, xy.y, pixel);
+                this.elements[pixel].behaviours[behaviour](this, x, y, pixel);
             }
         }
 
-        let reactionCount;
-        for (let i = 0; i < loopCount; i++) {
-            index = floor(random(this.pixels.length));
-            xy = this.getXY(index);
-            pixel = this.pixels[index];
-            if (this.reactions[pixel] === undefined) {
-                continue;
-            }
-            reactionCount = this.reactions[pixel].length;
-            for (let j = 0; j < reactionCount; j++) {
-                if (this.reactions[pixel][floor(random()*reactionCount)].do(this, xy.x, xy.y)) {
-                    break;
+        for (let i = 0; i < this.reactions.length; i++) {
+            const reaction = this.reactions[i];
+            const reactionLoopCount = loopCount*reaction.chance
+            for (let j = 0; j < reactionLoopCount; j++) {
+                let index = this.getRandIndex();
+                if (reaction.inA == this.pixels[index]) {
+                    reaction.do(this, this.getX(index), this.getY(index));
                 }
             }
         }
 
         let decayCount;
         for (let i = 0; i < loopCount; i+=10) {
-            index = floor(random(this.pixels.length));
-            xy = this.getXY(index);
+            index = this.getRandIndex();
+            x = this.getX(index);
+            y = this.getY(index);
             pixel = this.pixels[index];
             if (this.decays[pixel] === undefined) {
                 continue;
             }
             decayCount = this.decays[pixel].length;
             for (let j = 0; j < decayCount; j++) {
-                if (this.decays[pixel][floor(random()*decayCount)].do(this, xy.x, xy.y)) {
+                if (this.decays[pixel][floor(random()*decayCount)].do(this, x, y)) {
                     break;
                 }
             }
@@ -153,18 +160,18 @@ class Sandbox {
     getIndex(x, y) {
         return constrain(x, 0, this.width-1) + (constrain(y, 0, this.height-1)*this.width);
     }
+    getX(i) {
+        return i%this.width;
+    }
+    getY(i) {
+        return floor(i/this.width);
+    }
     getPixel(x, y) {
         return this.pixels[this.getIndex(x,y)];
     }
     setPixel(x, y, value) {
         const index = this.getIndex(x, y);
         this.pixels[index] = value;
-    }
-    getXY(i) {
-        return {
-            x: i%this.width,
-            y: floor(i/this.width)
-        }
     }
     getElement(x, y) {
         return this.elements[this.getPixel(x, y)];
@@ -201,6 +208,13 @@ class Sandbox {
         throw "Error: no element with name found. " + name;
         return 0;
     }
+    getRandIndex() {
+        this.randPosI ++;
+        if (this.randPosI >= this.pixels.length) {
+            this.randPosI = 0;
+        }
+        return this.randIndexes[this.randPosI];
+    }
 }
 
 // function exampleBehaviour(sandbox, x, y, pixel) {
@@ -225,9 +239,6 @@ class Reaction {
         this.chance = chance; // chance per pixel per frame that this reaction happens
     }
     do(sandbox, x, y) { // pos of pixel of type inA
-        if (random() > this.chance) {
-            return
-        }
         let dx = 0;
         let dy = 0;
         if (random() <0.5) {
