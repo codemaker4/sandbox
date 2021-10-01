@@ -39,8 +39,8 @@ function setup() {
     sandbox.addReaction(new Reaction("magma", "air", "magma", "fire", 0.3));
     sandbox.addReaction(new Reaction("magma", "air", "rocks", "fire", 0.002));
 
-    sandbox.addDecay(new Decay("steam", "water", 0.02)); // steam -> water
-    sandbox.addDecay(new Decay("fire", "air", 0.3)); // fire -> air
+    sandbox.addDecay(new Decay("steam", "water", 0.002)); // steam -> water
+    sandbox.addDecay(new Decay("fire", "air", 0.03)); // fire -> air
 
     sandbox.simSpeed = 0.25;
 

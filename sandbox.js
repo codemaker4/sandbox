@@ -101,10 +101,7 @@ class Sandbox {
     addDecay(decay) {
         decay.inA = this.getELementByName(decay.inA);
         decay.outA = this.getELementByName(decay.outA);
-        if (this.decays[decay.inA] === undefined) {
-            this.decays[decay.inA] = [];
-        }
-        this.decays[decay.inA].push(decay);
+        this.decays.push(decay);
     }
     tick() {
         let index;
@@ -135,19 +132,13 @@ class Sandbox {
             }
         }
 
-        let decayCount;
-        for (let i = 0; i < loopCount; i+=10) {
-            index = this.getRandIndex();
-            x = this.getX(index);
-            y = this.getY(index);
-            pixel = this.pixels[index];
-            if (this.decays[pixel] === undefined) {
-                continue;
-            }
-            decayCount = this.decays[pixel].length;
-            for (let j = 0; j < decayCount; j++) {
-                if (this.decays[pixel][floor(this.random()*decayCount)].do(this, x, y)) {
-                    break;
+        for (let i = 0; i < this.decays.length; i++) {
+            const decay = this.decays[i];
+            const reactionLoopCount = loopCount*decay.chance
+            for (let j = 0; j < reactionLoopCount; j++) {
+                let index = this.getRandIndex();
+                if (decay.inA == this.pixels[index]) {
+                    decay.do(this, this.getX(index), this.getY(index));
                 }
             }
         }
@@ -281,10 +272,6 @@ class Decay { // self reaction for decaying, like steam becoming water or fire b
         this.chance = chance; // chance per pixel per frame that this reaction happens
     }
     do(sandbox, x, y) {
-        if (sandbox.random() < this.chance) {
-            sandbox.setPixel(x, y, this.outA);
-            return true;
-        }
-        return false;
+        sandbox.setPixel(x, y, this.outA);
     }
 }
