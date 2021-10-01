@@ -1,11 +1,11 @@
 body {
     overflow: hidden;
     width: -webkit-fill-available;
-    height: -webkit-fill-available;
+    height: calc(100vh - calc(100vh - 100%));
 }
 
 canvas {
-    height: -webkit-fill-available;
+    height: calc(100vh - calc(100vh - 100%));
     object-fit: contain;
     
     image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
@@ -19,12 +19,12 @@ canvas {
 
 #canvasContainer {
     float: left;
-    height: -webkit-fill-available;
+    height: calc(100vh - calc(100vh - 100%));
 }
 
 #uiContainer {
     float: left;
-    height: -webkit-fill-available;
+    height: calc(100vh - calc(100vh - 100%));
 }
 
 #uiContainer * {
