@@ -254,13 +254,13 @@ class Reaction {
     do(sandbox, x, y) { // pos of pixel of type inA
         let dx = 0;
         let dy = 0;
-        if (random() <0.5) {
-            dx = round(random())*2-1;
+        if (sandbox.random() <0.5) {
+            dx = round(sandbox.random())*2-1;
             if ((x == 0 && dx == -1) || (x == sandbox.width-1 && dx == 1)) {
                 return false;
             }
         } else {
-            dy = round(random())*2-1;
+            dy = round(sandbox.random())*2-1;
             if ((y == 0 && dy == -1) || (y == sandbox.height-1 && dy == 1)) {
                 return false;
             }
@@ -281,7 +281,7 @@ class Decay { // self reaction for decaying, like steam becoming water or fire b
         this.chance = chance; // chance per pixel per frame that this reaction happens
     }
     do(sandbox, x, y) {
-        if (random() < this.chance) {
+        if (sandbox.random() < this.chance) {
             sandbox.setPixel(x, y, this.outA);
             return true;
         }
