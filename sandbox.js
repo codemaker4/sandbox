@@ -109,36 +109,38 @@ class Sandbox {
         let y;
         let pixel;
         let behaviour;
-        const loopCount = this.pixels.length*this.simSpeed
-        for (let i = 0; i < loopCount; i++) {
-            index = this.getRandIndex();
-            x = this.getX(index);
-            y = this.getY(index);
-            pixel = this.pixels[index];
-            if (this.elements[pixel].behaviours.length > 0) {
-                behaviour = floor(this.random(this.elements[pixel].behaviours.length))
-                this.elements[pixel].behaviours[behaviour](this, x, y, pixel);
-            }
-        }
-
-        for (let i = 0; i < this.reactions.length; i++) {
-            const reaction = this.reactions[i];
-            const reactionLoopCount = loopCount*reaction.chance
-            for (let j = 0; j < reactionLoopCount; j++) {
-                let index = this.getRandIndex();
-                if (reaction.inA == this.pixels[index]) {
-                    reaction.do(this, this.getX(index), this.getY(index));
+        const loopCount = this.pixels.length*min(1,this.simSpeed);
+        for (let k = 0; k < ceil(this.simSpeed); k++) {
+            for (let i = 0; i < loopCount; i++) {
+                index = this.getRandIndex();
+                x = this.getX(index);
+                y = this.getY(index);
+                pixel = this.pixels[index];
+                if (this.elements[pixel].behaviours.length > 0) {
+                    behaviour = floor(this.random(this.elements[pixel].behaviours.length))
+                    this.elements[pixel].behaviours[behaviour](this, x, y, pixel);
                 }
             }
-        }
-
-        for (let i = 0; i < this.decays.length; i++) {
-            const decay = this.decays[i];
-            const reactionLoopCount = loopCount*decay.chance
-            for (let j = 0; j < reactionLoopCount; j++) {
-                let index = this.getRandIndex();
-                if (decay.inA == this.pixels[index]) {
-                    decay.do(this, this.getX(index), this.getY(index));
+    
+            for (let i = 0; i < this.reactions.length; i++) {
+                const reaction = this.reactions[i];
+                const reactionLoopCount = loopCount*reaction.chance;
+                for (let j = 0; j < reactionLoopCount; j++) {
+                    let index = this.getRandIndex();
+                    if (reaction.inA == this.pixels[index]) {
+                        reaction.do(this, this.getX(index), this.getY(index));
+                    }
+                }
+            }
+    
+            for (let i = 0; i < this.decays.length; i++) {
+                const decay = this.decays[i];
+                const decayLoopCount = loopCount*decay.chance;
+                for (let j = 0; j < decayLoopCount; j++) {
+                    let index = this.getRandIndex();
+                    if (decay.inA == this.pixels[index]) {
+                        decay.do(this, this.getX(index), this.getY(index));
+                    }
                 }
             }
         }
